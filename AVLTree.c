@@ -78,45 +78,33 @@ struct AVLTree * BalanceTree(struct AVLTree *node){
     }
     return node;
 }
+
+/** print the tree*/
+void print2DUtil(struct AVLTree *head, int space)
+{
+
+    space += 10;
+
+    if(head)
+        print2DUtil(head->right, space);
+
+    printf("\n");
+    for (int i = 10; i < space; i++)
+        printf(" ");
+    if(head)
+        printf("%d\n\n", head->key);
+    else
+        printf("%c\n\n",'N');
+
+    if(head)
+        print2DUtil(head->left, space);
+}
 /************************************************************************************************************************************************************************************************************************************/
 
-/** traverse the tree by level*/ 
 void printAVLTree(struct AVLTree *head){
-    if(!head){
-        printf("*******************************\n");
-        printf("NULL");
-        printf("*******************************\n");
-    }
-    int headheight = getHeight(head), maxnode = 1;
-    while (headheight--)
-        maxnode <<= 1;
-    struct AVLTree **levelnode = (struct AVLTree **)malloc(sizeof(struct AVLTree *) * maxnode), **nextlevelnode = (struct AVLTree **)malloc(sizeof(struct AVLTree *) * maxnode);
-    int levelnodeS = 1, nextlevelnodeS = 1;
-
-    levelnode[0] = head;
-    headheight = 1;
-
-    printf("*******************************\n");
-    
-    while (nextlevelnodeS){
-        nextlevelnodeS=0;
-        printf("%d's level:\n", headheight++);
-        while (levelnodeS--){
-            if(levelnode[levelnodeS]){
-                printf("%d\t", levelnode[levelnodeS]->key);
-                nextlevelnode[nextlevelnodeS++] = levelnode[levelnodeS]->left;
-                nextlevelnode[nextlevelnodeS++] = levelnode[levelnodeS]->right;
-            } else
-                printf("N\t"); //NULL
-        }
-        printf("\n");
-        levelnodeS = nextlevelnodeS;
-        struct AVLTree **temp = levelnode;
-        levelnode = nextlevelnode;
-        nextlevelnode = temp;
-    }
-    printf("*******************************\n");
-
+    printf("*****************************");
+    print2DUtil(head,0);
+    printf("*****************************\n");
 }
 
 /** insert the new node into the AVL tree*/
@@ -149,13 +137,18 @@ struct AVLTree * delete(int num,struct AVLTree *head){
     else if(num>head->key)
         head->right = delete(num,head->right);
     else{
-        if(!head->left && !head->right)
+        if(!head->left && !head->right){
+            free(head);
             return NULL;
-        else if(!head->right)
-            return head->left;
-        else if(!head->left)
-            return head->right;
-        else{
+        } else if(!head->right){
+            struct AVLTree *temp=head->left;
+            free(head);
+            return temp;
+        } else if(!head->left){
+            struct AVLTree *temp=head->right;
+            free(head);
+            return temp;
+        } else{
             struct AVLTree *leftmost = head->left;
             while(leftmost->right)
                 leftmost = leftmost->right;
@@ -174,6 +167,14 @@ struct AVLTree * delete(int num,struct AVLTree *head){
     return head;
 }
 
+void freeTree(struct AVLTree *head){
+    if(head){
+        freeTree(head->left);
+        freeTree(head->right);
+        free(head);
+    }
+}
+
 
 /**
  * Your AVL struct will be instantiated and called as such:
@@ -185,15 +186,15 @@ struct AVLTree * delete(int num,struct AVLTree *head){
  * delete 7 from the tree.
  * tree = delete(7,tree);
  
- * print the tree, would be like following structure:
+ * print the tree:
  * printAVLTree(tree);
- * 1's level: 7
- * 2's level N N
+ 
+ * free the whole tree:
+ * freeTree(tree);
 */
 
 int main(){
     INIT_AVLTree(tree);
-    
     tree = insert(7,tree);
     tree = insert(4,tree);
     tree = insert(3,tree);
@@ -201,6 +202,8 @@ int main(){
     tree = insert(6,tree);
     printAVLTree(tree);
     tree = delete(4,tree);
+    printAVLTree(tree);
     tree = delete(6,tree);
     printAVLTree(tree);
+    freeTree(tree);
 }
